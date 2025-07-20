@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quáº£n lĂ½ Email Online - Auto Filter</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+body { font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+textarea, input, button { font-size: 16px; width: 90%; max-width: 340px; margin-top: 10px; padding: 12px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+button { background: #007bff; color: white; border: none; cursor: pointer; transition: background 0.3s; }
+button:hover { background: #0056b3; }
+.input-container { display: flex; gap: 10px; align-items: center; width: 90%; max-width: 340px; margin-top: 10px; }
+#manualCopyButton { max-width: 60px; padding: 10px; }
+#deleteListButton { background: #dc3545; }
+#deleteListButton:hover { background: #a71d2a; }
+#copyButton { font-size: 20px; padding: 18px; width: 95%; max-width: 380px; margin-top: 30px; background: #28a745; }
+#copyButton:hover { background: #1c7c31; }
+</style>
+</head>
+<body>
+
+<h3>đŸ“¨ Quáº£n lĂ½ danh sĂ¡ch Email Online (Tá»± Lá»c & LÆ°u)</h3>
+
+<textarea id="emailListInput" placeholder="DĂ¡n email, text rĂ¡c, phĂ¢n cĂ¡ch báº¥t ká»³ (| ; , space ...)"></textarea>
+<button id="addListButton">â• ThĂªm Email VĂ o Danh SĂ¡ch</button>
+<button id="deleteListButton">đŸ—‘ï¸ XĂ³a Danh SĂ¡ch Email</button>
+
+<div class="input-container">
+<input type="text" id="emailOutput" placeholder="Email sáº½ xuáº¥t hiá»‡n á»Ÿ Ä‘Ă¢y" readonly>
+<button id="manualCopyButton">đŸ“‹</button>
+</div>
+
+<p id="count"></p>
+<p id="output"></p>
+
+<button id="copyButton">đŸ“‹ Láº¥y & Copy Email</button>
+
+<script>
+// === Firebase Config ===
+const firebaseConfig = {
+  apiKey: "AIzaSyCitIIpZwm3QPe76ooFcBTN_8e4BKcN3FY",
+  authDomain: "mail24h-6f1a5.firebaseapp.com",
+  databaseURL: "https://mail24h-6f1a5-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "mail24h-6f1a5",
+  storageBucket: "mail24h-6f1a5.firebasestorage.app",
+  messagingSenderId: "421476533127",
+  appId: "1:421476533127:web:276fb02bab492eb5594922"
+};
+
+
+
+
+
+
+
+
+
+
+
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const emailRef = db.ref('emails');
+let emailList = [];
+
+// âœ… HĂ m tĂ¡ch email chuáº©n
+function extractEmails(text) {
+    const separators = /[\s,;|]+/;
+    const parts = text.split(separators);
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const emailSet = new Set();
+    parts.forEach(item => {
+        const cleaned = item.trim();
+        if (emailRegex.test(cleaned)) {
+            emailSet.add(cleaned.toLowerCase());
+        }
+    });
+    return Array.from(emailSet);
+}
+
+function updateCount() {
+    document.getElementById('count').textContent = `đŸ“ Sá»‘ email cĂ²n láº¡i: ${emailList.length}`;
+}
+
+// Copy á»•n Ä‘á»‹nh trĂªn má»i trĂ¬nh duyá»‡t
+function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            document.getElementById('output').textContent = `âœ… ÄĂ£ copy: ${text}`;
+        }).catch(() => fallbackCopy(text));
+    } else fallbackCopy(text);
+}
+function fallbackCopy(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+        const successful = document.execCommand('copy');
+        document.getElementById('output').textContent = successful ? `âœ… ÄĂ£ copy: ${text}` : 'â ï¸ KhĂ´ng thá»ƒ copy.';
+    } catch {
+        document.getElementById('output').textContent = 'â ï¸ Lá»—i khi copy.';
+    }
+    document.body.removeChild(textarea);
+}
+
+// Load danh sĂ¡ch mail realtime
+emailRef.on('value', snapshot => {
+    const data = snapshot.val();
+    emailList = data ? data : [];
+    updateCount();
+});
+
+// ThĂªm danh sĂ¡ch mail Ä‘Ă£ lá»c
+document.getElementById('addListButton').addEventListener('click', () => {
+    const input = document.getElementById('emailListInput').value.trim();
+    const filteredEmails = extractEmails(input);
+    if (filteredEmails.length === 0) {
+        document.getElementById('output').textContent = 'â ï¸ KhĂ´ng cĂ³ email há»£p lá»‡ Ä‘á»ƒ thĂªm.';
+        return;
+    }
+    emailRef.transaction(currentList => {
+        const updatedList = currentList ? currentList.slice() : [];
+        filteredEmails.forEach(email => {
+            if (!updatedList.includes(email)) {
+                updatedList.push(email);
+            }
+        });
+        return updatedList;
+    }, (error, committed, snapshot) => {
+        if (error) {
+            document.getElementById('output').textContent = 'â ï¸ Lá»—i khi thĂªm email.';
+        } else if (!committed) {
+            document.getElementById('output').textContent = 'â ï¸ KhĂ´ng thá»ƒ thĂªm email.';
+        } else {
+            const updatedList = snapshot.val() ? snapshot.val() : [];
+            document.getElementById('output').textContent = `âœ… ÄĂ£ thĂªm ${filteredEmails.length} email há»£p lá»‡, tá»•ng: ${updatedList.length}.`;
+            document.getElementById('emailListInput').value = '';
+            emailList = updatedList;
+            updateCount();
+        }
+    });
+});
+
+// XĂ³a toĂ n bá»™ danh sĂ¡ch
+document.getElementById('deleteListButton').addEventListener('click', () => {
+    if (!confirm("Báº¡n cĂ³ cháº¯c muá»‘n xĂ³a toĂ n bá»™ danh sĂ¡ch email?")) return;
+    emailRef.set([], (error) => {
+        if (error) {
+            document.getElementById('output').textContent = 'â ï¸ Lá»—i khi xĂ³a danh sĂ¡ch.';
+        } else {
+            document.getElementById('output').textContent = 'âœ… ÄĂ£ xĂ³a toĂ n bá»™ danh sĂ¡ch email.';
+            emailList = [];
+            updateCount();
+        }
+    });
+});
+
+// Copy thá»§ cĂ´ng
+document.getElementById('manualCopyButton').addEventListener('click', () => {
+    const email = document.getElementById('emailOutput').value;
+    if (!email) {
+        document.getElementById('output').textContent = 'â ï¸ KhĂ´ng cĂ³ email Ä‘á»ƒ copy.';
+        return;
+    }
+    copyText(email);
+});
+
+// Láº¥y & Copy 1 email + xĂ³a (cĂ³ khĂ³a nĂºt trĂ¡nh báº¥m nhanh)
+document.getElementById('copyButton').addEventListener('click', () => {
+    const copyButton = document.getElementById('copyButton');
+    copyButton.disabled = true;
+    copyButton.textContent = "â³ Äang xá»­ lĂ½...";
+
+    if (emailList.length === 0) {
+        document.getElementById('output').textContent = 'âœ… Danh sĂ¡ch Ä‘Ă£ háº¿t email.';
+        copyButton.disabled = false;
+        copyButton.textContent = "đŸ“‹ Láº¥y & Copy Email";
+        return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * emailList.length);
+    const email = emailList[randomIndex];
+    copyText(email);
+
+    emailRef.transaction(currentList => {
+        if (!currentList) return null;
+        const idx = currentList.indexOf(email);
+        if (idx !== -1) {
+            currentList.splice(idx, 1);
+        }
+        return currentList;
+    }, (error, committed, snapshot) => {
+        if (error) {
+            document.getElementById('output').textContent = 'â ï¸ Lá»—i khi xĂ³a email.';
+        } else if (committed) {
+            document.getElementById('emailOutput').value = email;
+            emailList = snapshot.val() || [];
+            updateCount();
+        }
+        copyButton.disabled = false;
+        copyButton.textContent = "đŸ“‹ Láº¥y & Copy Email";
+    });
+});
+</script>
+</body>
+  </html>
