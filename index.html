@@ -138,6 +138,22 @@ textarea, input, button {
 
 <div class="container">
 
+    <!-- ======================= QUẢN LÝ EMAIL ONLINE ======================= -->
+    <div class="card">
+        <h3>📨 Quản lý Email Online</h3>
+
+        <textarea id="emailListInput" placeholder="Dán text chứa email ..."></textarea>
+        <button id="addListButton" class="btn">➕ Thêm Email</button>
+        <button id="deleteListButton" class="btn" style="background:#dc3545;">🗑 Xóa toàn bộ</button>
+
+        <input type="text" id="emailOutput" placeholder="Email đã copy sẽ xuất hiện ở đây" readonly>
+
+        <p id="count"></p>
+        <p id="output" style="font-size:14px; opacity:0.9;"></p>
+
+        <button id="copyButton" class="btn-green">📋 Lấy & Copy Email</button>
+    </div>
+
     <!-- ======================= EMAIL REUSE ======================= -->
     <div class="card">
         <h3>Email Reuse</h3>
@@ -159,23 +175,6 @@ textarea, input, button {
             <button id="nextReuse">Đổi email</button>
             <button id="copyReuse" class="btn-green">Copy</button>
         </div>
-    </div>
-
-
-    <!-- ======================= QUẢN LÝ EMAIL ONLINE ======================= -->
-    <div class="card">
-        <h3>📨 Quản lý Email Online</h3>
-
-        <textarea id="emailListInput" placeholder="Dán text chứa email ..."></textarea>
-        <button id="addListButton" class="btn">➕ Thêm Email</button>
-        <button id="deleteListButton" class="btn" style="background:#dc3545;">🗑 Xóa toàn bộ</button>
-
-        <input type="text" id="emailOutput" placeholder="Email đã copy sẽ xuất hiện ở đây" readonly>
-
-        <p id="count"></p>
-        <p id="output" style="font-size:14px; opacity:0.9;"></p>
-
-        <button id="copyButton" class="btn-green">📋 Lấy & Copy Email</button>
     </div>
 
 </div>
@@ -239,21 +238,19 @@ addReuseBtn.onclick = async () => {
 };
 
 // Bấm ô email hiện tại sẽ đẩy email từ input vào Firebase
-// Bấm ô email hiện tại sẽ đẩy email từ input vào Firebase
 reuseButton.onclick = () => {
     const email = reuseInput.value.trim();
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!email || !emailRegex.test(email)) return; // nếu không hợp lệ, bỏ qua
+    if (!email || !emailRegex.test(email)) return;
 
     if (reuseSet.has(email)) {
-        reuseInput.value = ""; // nếu trùng thì xoá ô input
-        return; // không thêm
+        reuseInput.value = "";
+        return;
     }
 
     reuseRef.push(email);
-    reuseInput.value = ""; // thêm xong thì cũng xoá input
+    reuseInput.value = "";
 };
-
 
 // Đổi email
 document.getElementById("nextReuse").onclick = () => {
@@ -266,7 +263,6 @@ document.getElementById("copyReuse").onclick = () => {
     if (reuseCache.length === 0) return;
     navigator.clipboard.writeText(reuseCache[0].email);
 };
-
 
 /* ------------------ QUẢN LÝ EMAIL ONLINE ------------------ */
 const emailRef = db.ref("emails");
