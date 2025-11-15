@@ -169,12 +169,17 @@ textarea, input, button {
             <input id="reuseInput" placeholder="Dán email vào đây">
         </div>
 
-        <div class="actions">
-            <!-- Nút “Thêm” chỉ dán clipboard vào input -->
-            <button id="addReuse">Dán clipboard</button>
-            <button id="nextReuse">Đổi email</button>
-            <button id="copyReuse" class="btn-green">Copy</button>
-        </div>
+        <div class="actions" style="display:flex; gap:8px;">
+    <!-- Cột dọc 25%: Dán clipboard + Đổi email -->
+    <div style="display:flex; flex-direction:column; flex:1; gap:8px;">
+        <button id="addReuse">Dán clipboard</button>
+        <button id="nextReuse">Đổi email</button>
+    </div>
+
+    <!-- Nút copy 50% -->
+    <button id="copyReuse" class="btn-green" style="flex:2;">Copy</button>
+</div>
+
     </div>
 
 </div>
